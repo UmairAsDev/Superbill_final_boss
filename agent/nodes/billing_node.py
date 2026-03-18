@@ -6,7 +6,7 @@ from config.schema import BillingState
 
 
 def superbill_node(state: BillingState):
-    encounter_facts = state.get("encounter_facts", {})
+    encounter_facts = state.get("raw_note", {})
     superbill = {
         "patient_id": encounter_facts.get("patient", {}).get("id"),
         "date_of_service": encounter_facts.get("visit", {}).get("date"),

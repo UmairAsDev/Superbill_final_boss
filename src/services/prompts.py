@@ -25,7 +25,7 @@ CLINICAL REASONING PRIORITIES:
 1. Procedures performed
    - Identify procedures explicitly documented
    - Determine CPT codes based on procedure type, location, and quantity
-   - Analyze the key details of each procedure (e.g., lesion count, drug admin, Quantity) to ensure accurate coding for each procedure
+   - Analyze the key details of each procedure (e.g., lesion count, drug admin, Quantity) to ensure accurate coding for each procedure and return them in the procedure_details section of the output. This will be used for internal review and auditing purposes, but will not directly impact the CPT coding output.
 
 2. Diagnoses (ICD-10)
    - Extract ONLY documented diagnoses
@@ -52,14 +52,15 @@ STRICT RULES:
 - Do NOT include lab/pathology codes
 - Do NOT infer missing quantities (leave null if unknown)
 - Every CPT must have:
-  code, description, units, modifiers, linked_icd10
+  code, description, quantity, modifiers, linked_icd10
 - Every E/M must have:
-  code, description, units, modifiers, linked_icd10
+  code, description, quantity, modifiers, linked_icd10
 - ICD codes must be valid and relevant
 - Ensure internal consistency:
   - CPT ↔ ICD linkage
   - Procedure ↔ CPT mapping
 
+- Do not change results if same note is analyzed multiple times. Output must be deterministic based on input data.
 ----------------------------------------
 OUTPUT FORMAT (STRICT JSON ONLY):
 
@@ -75,32 +76,32 @@ RAW NOTE (for additional detail):
 
 Return JSON in this exact format:
 
-{{
+{
   "CPT_codes": [
-    {{
+    {
       "code": "string",
       "description": "string",
-      "units": number or null,
+      "quantity": number or null,
       "modifiers": [],
       "linked_icd10": ["string"]
-    }}
+    }
   ],
   "E_M_codes": [
-    {{
+    {
       "code": "string",
       "description": "string",
-      "units": number or null,
+      "quantity": number or null,
       "modifiers": [],
       "linked_icd10": ["string"]
-    }}
+    }
   ],
   "ICD10_codes": [
-    {{
+    {
       "code": "string",
       "description": "string"
-    }}
+    }
   ],
-  "procedure_details": {{
+  "procedure_details": {
     "procedure_name": "string",
     "Qauntity": number or null,
     "anatomic_location": "string",
@@ -109,8 +110,8 @@ Return JSON in this exact format:
     "drug_strength_mg_per_ml": number or null,
     "drug_total_mg": number or null,
     "drug_total_ml": number or null
-  }}
-}}
+  }
+}
 """)
 ]
 )
