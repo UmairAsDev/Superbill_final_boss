@@ -5,17 +5,18 @@ from typing import TypedDict, List, Dict, Any
 
 class BillingState(TypedDict):
     note_id : int
-    raw_note: str
-    encounter_facts: Dict
-    billing_response: Dict
-    validated_cpt: List[Dict]
-    validated_em: List[Dict]
-    validated_modifiers: List[Dict]
-    superbill: Dict
+    raw_note: Dict[str, Any]
+    encounter_facts: Dict[str, Any]
+    billing_response: Dict[str, Any]
+    validated_cpt: List[Dict[str, Any]]
+    validated_em: List[Dict[str, Any]]
+    validated_modifiers: List[Dict[str, Any]]
+    superbill: Dict[str, Any]
+    # final_output: List[Dict[str, Any]]
     
     
 class BillingOutput(BaseModel):
-    CPT_codes: List[Dict] = Field(default_factory=list)
-    E_M_codes: List[Dict] = Field(default_factory=list)
-    ICD10_codes: List[str] = Field(default_factory=list)   
+    CPT_codes: List[Dict[str, Any]] = Field(default_factory=list)
+    E_M_codes: List[Dict[str, Any]] = Field(default_factory=list)
+    ICD10_codes: List[Dict[str, Any]] = Field(default_factory=list)
     procedure_details: Dict[str, Any] = Field(default_factory=dict)

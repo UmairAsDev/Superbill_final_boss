@@ -15,7 +15,7 @@ def get_openai_llm() -> ChatOpenAI:
         api_key=SecretStr(modelconfig.OPENAI_API_KEY),
         model=modelconfig.MODEL_NAME,
         temperature=modelconfig.TEMPERATURE,
-        top_p=1.0,
-        frequency_penalty=0.0,
-        presence_penalty=0.0,
+        streaming=False,
     )
+
+

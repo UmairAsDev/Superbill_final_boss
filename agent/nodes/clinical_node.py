@@ -6,11 +6,12 @@ from config.schema import BillingState
 from loguru import logger
 
 
-def clinical_node(state: BillingState):
+async def clinical_node(state: BillingState):
     note_id = state.get("note_id")
-    encounter_facts = structured_notes_context(note_id)
-    logger.info(f"Extracted encounter facts: {encounter_facts.keys()}")
-    state["encounter_facts"] = encounter_facts
+    encounter_facts = await structured_notes_context(note_id)
+    logger.info(f"Extracted encounter facts: {encounter_facts}")
+    if encounter_facts:
+        state["raw_note"] = encounter_facts
     return state
 
 

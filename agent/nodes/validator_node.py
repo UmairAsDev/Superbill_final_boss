@@ -123,8 +123,57 @@ async def em_validator_node(state: BillingState) -> BillingState:
 
 
 def output_layer(state: BillingState) -> BillingState:
-    """
-    Final node to prepare output.
-    Can be extended for additional formatting or data enrichment.
-    """
+    billing_note = state.get("superbill", {}).get("billing_notes", {})
+
+    # Extract only the code strings for fast membership checks
+    validated_cpt = {c["proCode"] for c in state.get("validated_cpt", [])}
+    validated_em = {e["enmCode"] for e in state.get("validated_em", [])}
+
+    final_rows = []
+
+
+    for cpt in billing_note.get("CPT_codes", []):
+        if cpt["code"] not in validated_cpt:
+            continue
+
+        final_rows.append({
+            "procedure": cpt["description"],
+            "code": cpt["code"],
+            "type": "CPT",
+            "modifiers": cpt.get("modifiers", []),
+            "dx_codes": cpt.get("linked_icd10", []),
+            "qty": cpt.get("Quantity", 1),
+            "per_unit": cpt.get("chargePerUnit", 0),
+        })
+
+
+    for em in billing_note.get("E_M_codes", []):
+        if em["code"] not in validated_em:
+            continue
+
+        final_rows.append({
+            "procedure": em["description"],
+            "code": em["code"],
+            "type": "EM",
+            "modifiers": em.get("modifiers", []),
+            "dx_codes": em.get("linked_icd10", []),
+            "qty": em.get("Quantity", 1),
+            "per_unit": "Yes",
+        })
+
+
+    cpt_config = {
+        c["proCode"]: c for c in state.get("superbill", {}).get("cpt_codes", [])
+    }
+
+    for row in final_rows:
+        if row["code"] in cpt_config:
+            charge_flag = cpt_config[row["code"]].get("chargePerUnit", 0)
+            row["per_unit"] = "Yes" if charge_flag == 1 else "No"
+
+
+    final_rows.sort(key=lambda x: (x["type"] != "CPT", x["code"]))
+
+    state["final_output"] = final_rows #type: ignore
+
     return state

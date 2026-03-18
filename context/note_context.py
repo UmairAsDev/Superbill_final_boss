@@ -5,7 +5,6 @@ import pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent))
 from src.notes.notes import notes
 from loguru import logger
-from sqldatabase.conn import async_engine
 from utils.helper import clean_html
 from operator import itemgetter
 
@@ -20,55 +19,58 @@ from operator import itemgetter
 
 
 async def notes_context(note_id: int):
-    try:
-        note_data = await notes(note_id)
-        cleaned_data = clean_html(note_data) if note_data else None
-        return cleaned_data
-
-    finally:
-        await async_engine.dispose()
-        logger.info("Database connection closed.")
+    note_data = await notes(note_id)
+    cleaned_data = clean_html(note_data) if note_data else None
+    return cleaned_data
 
 
 
-def structured_notes_context(note_id: int): 
-    import asyncio
-    try:
-        loop = asyncio.get_running_loop()
-        import nest_asyncio
-        nest_asyncio.apply()
-        notes = loop.run_until_complete(notes_context(note_id))
-    except RuntimeError:
-        notes = asyncio.run(notes_context(note_id))
-
-    # Define all required fields with consistent naming
-    required_fields = [
-        ("noteDate", "noteDate"),
-        ("patientId", "patientId"),
-        ("PlaceOfService", "PlaceOfService"),
-        ("patientSummary", "patientSummary"),
-        ("complaints", "complaints"),
-        ("assesment", "assesment"),
-        ("diagnoses", "diagnoses"),
-        ("procedure", "procedure"),
-        ("examination", "examination"),
-        ("pastHistory", "pastHistory"),
-        ("currentmedication", "currentmedication"),
-        ("biopsyNotes", "biopsyNotes"),
-        ("mohsNotes", "mohsNotes"),
-    ]
-
-    # If no notes found, return all fields as None
-    if not notes or not isinstance(notes, list) or not notes[0]:
-        return {k: None for k, _ in required_fields}
-
-    record = notes[0]
-    encounter_facts = {k: record.get(db_key, None) for k, db_key in required_fields}
-    return encounter_facts
+async def structured_notes_context(note_id: int): 
+    notes = await notes_context(note_id)
+    if not notes:
+        logger.warning(f"No note data found for note_id: {note_id}")
+        return None
+    
+    record = notes[0] 
+    
+    raw = {
+        "note_date" : record.get("noteDate"),
+        "patient_id" : record.get("patientId"),
+        "place_of_service": record.get("PlaceOfService"),
+        "summary": record.get("patientSummary"),
+        "complaints": record.get("complaints"),
+        "assessment": record.get("assesment"),
+        "diagnoses_raw": record.get("diagnoses"),
+        "procedure_raw": record.get("procedure"),
+        "exam": record.get("examination"),
+        "history": record.get("pastHistory"),
+        "medications_raw": record.get("currentmedication"),
+    }
+    
+    structured = {
+        "patient" : {
+            "id": raw["patient_id"],
+            "summary": raw["summary"],
+        },
+        "visit" : { 
+            "date": raw["note_date"],
+            "place_of_service": raw["place_of_service"],
+        },
+        "clinical": {
+            "complaints": raw["complaints"],
+            "assessment": raw["assessment"],
+            "exam": raw["exam"],
+        },
+        "procedures": raw["procedure_raw"],
+        "diagnoses": raw["diagnoses_raw"],
+        "medications": raw["medications_raw"],
+    }
+    structured["raw_note"] = raw
+    return structured   
 
 
 
 if __name__ == "__main__":
-    test_note_id = 577074
-    result = structured_notes_context(test_note_id)
+    test_note_id = 698404
+    result = asyncio.run(structured_notes_context(test_note_id))
     print(result)

@@ -12,10 +12,11 @@ from loguru import logger
 
     
 def llm_node(state: BillingState):
-    encounter_facts = state.get("encounter_facts")
-    if not encounter_facts:
-        raise ValueError("No encounter facts found in state")
-    
+    raw_note = state.get("raw_note")
+
+    if not raw_note:
+        raise ValueError("No raw note found in state")
+
     llm = get_openai_llm()
 
     parser = PydanticOutputParser(pydantic_object=BillingOutput)
@@ -23,27 +24,29 @@ def llm_node(state: BillingState):
     prompt = billing_prompt.partial(
         format_instructions=parser.get_format_instructions()
     )
-
+    print("Prompt template:", prompt)  # Debug: print the prompt template
     chain = prompt | llm | parser
 
-    response_new = chain.invoke({
-        "raw_note": state.get("encounter_facts", "")
-    })
-    logger.info(f"LLM response: {response_new}")
-    response: BillingOutput = chain.invoke({
-        "raw_note": state.get("encounter_facts", "")
-    })
-
+    try:
+        response: BillingOutput = chain.invoke({
+            "raw_note": json.dumps(raw_note, default=str, indent=2)
+        })
+        print("LLM response:", response)
+    except Exception as e:
+        logger.error(f"LLM parsing failed: {e}")
+        raise ValueError("LLM failed to return valid structured output")
 
     if response is None:
-        raise ValueError("LLM did not return a response")
+        raise ValueError("LLM returned empty response")
 
     llm_data = response.model_dump()
-    for key in ["E_M_codes", "CPT_codes", "ICD10_codes", "procedure_details"]:
-        if key not in llm_data or llm_data[key] is None:
-            llm_data[key] = [] if "codes" in key else {}
 
-    state["billing_response"].update(llm_data)
+    required_keys = ["CPT_codes", "E_M_codes", "ICD10_codes", "procedure_details"]
+
+    for key in required_keys:
+        if key not in llm_data:
+            raise ValueError(f"Missing key in LLM output: {key}")
+
+    state["billing_response"] = llm_data
 
     return state
-

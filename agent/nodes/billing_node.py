@@ -6,11 +6,12 @@ from config.schema import BillingState
 
 
 def superbill_node(state: BillingState):
+    encounter_facts = state.get("encounter_facts", {})
     superbill = {
-        "patient_id": state["encounter_facts"]['patientId'],
-        "date_of_service": state["encounter_facts"]["noteDate"],
-        "place_of_service": state["encounter_facts"]["PlaceOfService"],
-        "diagnoses": state["encounter_facts"]["diagnoses"],
+        "patient_id": encounter_facts.get("patient", {}).get("id"),
+        "date_of_service": encounter_facts.get("visit", {}).get("date"),
+        "place_of_service": encounter_facts.get("visit", {}).get("place_of_service"),
+        "diagnoses": encounter_facts.get("diagnoses"),
         "cpt_codes": state.get("validated_cpt", []),
         "em_codes": state.get("validated_em", []),
         "billing_notes": state.get("billing_response", {})

@@ -23,17 +23,18 @@ async def generate_superbill(request: SuperbillRequest):
         # Initialize state
         state: BillingState = {
             "note_id": request.note_id,
-            "raw_note": "",
+            "raw_note": {},
             "encounter_facts": {},
             "billing_response": {},
             "validated_cpt": [],
             "validated_em": [],
             "validated_modifiers": [],
-            "superbill": {}
+            "superbill": {},
+            # "final_output": {}
         }
 
-        # Run workflow (async)
-        final_state = await workflow.ainvoke(state)
+        # Run workflow
+        final_state = await  workflow.ainvoke(state)
 
         # Return only the superbill part
         return {"superbill": final_state["superbill"]}
