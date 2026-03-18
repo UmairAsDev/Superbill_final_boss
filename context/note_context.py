@@ -13,11 +13,6 @@ from operator import itemgetter
 
 
 
-
-
-
-
-
 async def notes_context(note_id: int):
     note_data = await notes(note_id)
     cleaned_data = clean_html(note_data) if note_data else None

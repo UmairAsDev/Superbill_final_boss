@@ -76,32 +76,32 @@ RAW NOTE (for additional detail):
 
 Return JSON in this exact format:
 
-{
+{{
   "CPT_codes": [
-    {
+    {{
       "code": "string",
       "description": "string",
       "quantity": number or null,
       "modifiers": [],
       "linked_icd10": ["string"]
-    }
+    }}
   ],
   "E_M_codes": [
-    {
+    {{
       "code": "string",
       "description": "string",
       "quantity": number or null,
       "modifiers": [],
       "linked_icd10": ["string"]
-    }
+    }}
   ],
   "ICD10_codes": [
-    {
+    {{
       "code": "string",
       "description": "string"
-    }
+    }}
   ],
-  "procedure_details": {
+  "procedure_details": {{
     "procedure_name": "string",
     "Qauntity": number or null,
     "anatomic_location": "string",
@@ -110,8 +110,8 @@ Return JSON in this exact format:
     "drug_strength_mg_per_ml": number or null,
     "drug_total_mg": number or null,
     "drug_total_ml": number or null
-  }
-}
+  }}
+}}
 """)
 ]
 )
@@ -119,3 +119,54 @@ Return JSON in this exact format:
 
 
 
+"""Extract structured procedure details.
+
+Known signals:
+{signals}
+
+Rules:
+- Do NOT invent procedures
+- Only extract what is explicitly present
+- If missing, return null
+- Do NOT generate CPT codes
+
+Return JSON:
+{
+  "procedures": [
+    {
+      "type": "",
+      "method": "",
+      "count": null,
+      "location": ""
+    }
+  ]
+}
+"""
+
+
+ICD_PROMPT = """
+You are a medical coding assistant.
+
+Task:
+Map diagnoses to ICD-10 codes.
+
+Rules:
+- Use ONLY standard ICD-10 codes
+- Do NOT invent codes
+- If unsure, return null
+- Codes must match diagnosis exactly
+- Keep mapping precise and minimal
+
+Diagnoses:
+{diagnoses}
+
+Return ONLY JSON:
+{
+  "icd_codes": [
+    {
+      "code": "string",
+      "description": "string"
+    }
+  ]
+}
+"""
