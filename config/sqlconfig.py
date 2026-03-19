@@ -26,7 +26,7 @@ sqlsettings = SQLSETTINGS() #type: ignore
 
 class MODELCONFIG(BaseSettings):
     
-    MODEL_NAME: str = "gpt-5.4-2026-03-05"
+    MODEL_NAME: str = "gpt-4o"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     OPENAI_API_KEY: str
     TEMPERATURE: float = 0.0

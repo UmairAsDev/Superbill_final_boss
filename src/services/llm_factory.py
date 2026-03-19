@@ -16,6 +16,8 @@ def get_openai_llm() -> ChatOpenAI:
         model=modelconfig.MODEL_NAME,
         temperature=modelconfig.TEMPERATURE,
         streaming=False,
+        seed=42,
+        model_kwargs={"response_format": {"type": "json_object"}},
     )
 
 

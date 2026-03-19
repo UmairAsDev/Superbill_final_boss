@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, URL
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from config.sqlconfig import sqlsettings as settings
+from config.pgconfig import pgsettings
 from loguru import logger
 
 
@@ -60,3 +61,30 @@ class Base(DeclarativeBase):
     pass
 
 
+# ============================================================================
+# PostgreSQL (Neon) Async Connection for Vector Similarity Search
+# ============================================================================
+
+pg_async_url = URL.create(
+    "postgresql+asyncpg",
+    username=pgsettings.PGUSER,
+    password=pgsettings.PGPASSWORD,
+    host=pgsettings.PGHOST,
+    port=int(pgsettings.PGPORT),
+    database=pgsettings.PGDATABASE,
+    query={"ssl": "require"}  # Neon requires SSL
+)
+
+pg_async_engine = create_async_engine(
+    pg_async_url,
+    pool_size=3,
+    max_overflow=5,
+    pool_recycle=3600
+)
+
+pg_async_session = async_sessionmaker(
+    pg_async_engine,
+    expire_on_commit=False
+)
+
+logger.success(f"PostgreSQL connection configured: {pgsettings.PGHOST}")
