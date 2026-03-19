@@ -40,6 +40,8 @@ async def structured_notes_context(note_id: int):
         "exam": record.get("examination"),
         "history": record.get("pastHistory"),
         "medications_raw": record.get("currentmedication"),
+        "mohs_notes": record.get("mohsNotes"),
+        "biopsy_notes": record.get("biopsyNotes"),
     }
     
     structured = {
@@ -59,6 +61,8 @@ async def structured_notes_context(note_id: int):
         "procedures": raw["procedure_raw"],
         "diagnoses": raw["diagnoses_raw"],
         "medications": raw["medications_raw"],
+        "mohs_notes": raw["mohs_notes"],
+        "biopsy_notes": raw["biopsy_notes"],
     }
     structured["raw_note"] = raw
     return structured   
